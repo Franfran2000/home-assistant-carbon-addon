@@ -28,22 +28,17 @@ while True:
     devices = []
     names = set()
     for dic in j:
-        #print(dic)
-        #print(dic.get("entity_id", ""))
+
         entity_id = dic.get("entity_id", "").split('.')
         name_id = entity_id[1].split('_')
         if entity_id[0].lower() in device_types.keys() and dic.get("state", "") != "unavailable":
             if (entity_id[0],name_id[0]) not in names:
                 names.add((entity_id[0],name_id[0]))
                 devices += [entity_id[0].lower()]
-    #print(devices)
 
     sum_carbon = 0
     for device in devices:
         sum_carbon += device_types[device]
-
-    # for i in range(100):
-    #     sum_carbon += random.randint(1, 10)
 
     post_data = {
         "state": f"{sum_carbon:.2f}",
@@ -54,7 +49,6 @@ while True:
     }
 
     post_url = "http://supervisor/core/api/states/sensor.carbon_emitted"
-    #local_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxNzE5NzBmNDkxMjY0OGFlOWFhYmUyYTlmZDE1ZjkzYyIsImlhdCI6MTcxOTQwODMyOSwiZXhwIjoyMDM0NzY4MzI5fQ.n9yLPkBHEKD3sq41eZHkAiOh6xfrq3e_nXr_yuKhonM"
     post_headers = {
         "content-type": "application/json"
     }
