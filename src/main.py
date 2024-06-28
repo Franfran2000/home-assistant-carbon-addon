@@ -4,6 +4,8 @@ import os
 import random
 import time
 
+from datetime import datetime
+
 class BearerAuth(auth.AuthBase):
     def __init__(self, token):
         self.token = token
@@ -18,7 +20,74 @@ headers = {
     "content-type": "application/json"
 }
 
+time_string = datetime.now().isoformat()
+
+token_grid_map = "TOKEN"
+headers = {
+    "auth": token_grid_map
+}
+electricity_carbon = get("https://api.electricitymap.org/v3/carbon-intensity/history?zone=BE", headers=headers)
+print(electricity_carbon.text)
+elec_json = electricity_carbon.json()["history"]
+
+total = 0
+for d in elec_json:
+    total += d["carbonIntensity"]
+total /= len(elec_json)
+
+current = elec_json[-1]["carbonIntensity"]
+if total > current :
+    s = "Now is a good time to use electricity"
+else:
+    s = "Now is not a good time to use electricity"
+
+post_data = {
+    "state": f"{s}",
+    "attributes": {
+        "time": time_string
+    }
+}
+
+post_url = "http://supervisor/core/api/states/carbon.carbon_use"
+post_headers = {
+    "content-type": "application/json"
+}
+headers = {"Authorization": f"Bearer {token}", "content-type": "application/json"}
+post_response = post(post_url, headers=headers, json=post_data)
+
+post_data = {
+    "state": f"Average CO2 intensity: {total:.2f}",
+    "attributes": {
+        "unit_of_measurement": "gCO2eq/kWh",
+        "time": time_string
+    }
+}
+
+post_url = "http://supervisor/core/api/states/carbon.average_carbon_use"
+post_headers = {
+    "content-type": "application/json"
+}
+headers = {"Authorization": f"Bearer {token}", "content-type": "application/json"}
+post_response = post(post_url, headers=headers, json=post_data)
+
+post_data = {
+    "state": f"Current CO2 intensity: {current}",
+    "attributes": {
+        "unit_of_measurement": "gCO2eq/kWh",
+        "time": time_string
+    }
+}
+
+post_url = "http://supervisor/core/api/states/carbon.current_carbon_use"
+post_headers = {
+    "content-type": "application/json"
+}
+headers = {"Authorization": f"Bearer {token}", "content-type": "application/json"}
+post_response = post(post_url, headers=headers, json=post_data)
+
 while True:
+
+    time_string2 = datetime.now().isoformat()
     response = get(url, headers=headers, auth=BearerAuth(token))
     #print(response.text)
     j = response.json()
@@ -44,16 +113,16 @@ while True:
         "state": f"{sum_carbon:.2f}",
         "attributes": {
             "unit_of_measurement": "kgCO2-eq",
-            "time":"2024-06-26T15:17:52+00:00"
+            "time":time_string2
         }
     }
 
-    post_url = "http://supervisor/core/api/states/sensor.carbon_emitted"
+    post_url = "http://supervisor/core/api/states/carbon.carbon_emitted"
     post_headers = {
         "content-type": "application/json"
     }
     headers = {"Authorization": f"Bearer {token}", "content-type": "application/json"}
     post_response = post(post_url, headers=headers, json=post_data)
-    #print(post_response.text)
+    #print(post_response.text)sd  
 
     time.sleep(5)
