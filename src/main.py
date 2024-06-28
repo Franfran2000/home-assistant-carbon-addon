@@ -22,8 +22,9 @@ while True:
     response = get(url, headers=headers, auth=BearerAuth(token))
     #print(response.text)
     j = response.json()
-    # values estimated using the framework
 
+    device_types = {"light": 2.55, "sensor": 3.99, "binary_sensor": 3.99, "switch": 1.81}
+    # values estimated using the framework
     devices = []
     names = set()
     for dic in j:
@@ -61,12 +62,4 @@ while True:
     post_response = post(post_url, headers=headers, json=post_data)
     #print(post_response.text)
 
-    token_grid_map = "ixy73lHlChCgK"
-    headers = {
-        "zone": "Be",
-        "auth": token_grid_map
-    }
-    electricity_carbon = get("https://api.electricitymap.org/v3/carbon-intensity/history", headers=headers)
-    print(electricity_carbon.json())
-
-    time.sleep(120)
+    time.sleep(5)
